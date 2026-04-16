@@ -248,7 +248,10 @@ ready(() => {
 
     for (const item of processedItems) {
       const name = item[fields[0]] || "";
-      const img = item[fields[1]] || "";
+      let img = item[fields[1]] || "";
+      if (img.includes('/-/')) {
+        img = img.split('/-/')[0] + '/';
+      }
       const price = item[fields[2]] || "";
       const desc = item[fields[3]] || "";
       const category = (item[fields[4]] || "").toLowerCase();
