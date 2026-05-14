@@ -1,4 +1,10 @@
 // ========== ПЕРЕМЕННЫЕ ==========
+function toProductImgUrl(raw) {
+  return typeof normalizeSheetImageUrl === "function"
+    ? normalizeSheetImageUrl(raw)
+    : String(raw || "").trim();
+}
+
 const baseCSVUrl =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTbtBsnRAE2vVA4sCdHNUnH_3Rao9DlTnzZxs_C9ate6mA2KA6_WeQsfZaxluCmjBv61Frn-eoIXyoL/pub?output=csv&sheet=Лист1";
 
@@ -57,7 +63,7 @@ function renderFavorites() {
 
   favItems.forEach((raw) => {
     const name = raw[fields[0]] || "";
-    const img = raw[fields[1]] || "";
+    const img = toProductImgUrl(raw[fields[1]] || "");
     const price = raw[fields[2]] || "";
     const desc = raw[fields[3]] || "";
 
@@ -65,7 +71,7 @@ function renderFavorites() {
     card.className = "card";
     card.innerHTML = `
       <div class="card-img-wrap">
-  <img loading="lazy" class='all-products-img' src="${img}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'240\' height=\'160\'><rect width=\'100%\' height=\'100%\' fill=\'%23e8e8e8\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23999\' font-size=\'20\'>Фото</text></svg>'">
+        <img loading="lazy" class='all-products-img' src="${img}" referrerpolicy="no-referrer" decoding="async" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'240\' height=\'160\'><rect width=\'100%\' height=\'100%\' fill=\'%23e8e8e8\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23999\' font-size=\'20\'>Фото</text></svg>'">
     <img
       class="heart-icon ${favorites.includes(name) ? "favorited" : ""}"
       src="./images/${
@@ -107,6 +113,7 @@ function openModal({ name, img, price, desc }) {
   const closeBtn  = modal.querySelector('#closeModal');
 
   // наполняем
+  imgEl.referrerPolicy = "no-referrer";
   imgEl.src           = img;
   titleEl.textContent = name;
   priceEl.textContent = price + ' ₸';

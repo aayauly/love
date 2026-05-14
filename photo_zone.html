@@ -111,6 +111,7 @@
 
   <!-- 1) Подключаем PapaParse -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="./sheet-image-url.js"></script>
   <!-- 2) Наш скрипт -->
   <script>
   const KASPI_URL = "https://pay.kaspi.kz/pay/pizgc94e";
@@ -128,6 +129,7 @@
 
   function openModal(item) {
     currentItem = item;
+    imgEl.referrerPolicy = "no-referrer";
     imgEl.src           = item.img;
     titleEl.textContent = item.name;
     descEl.textContent  = item.desc || "";
@@ -171,16 +173,20 @@
 
     result.data.forEach(row => {
       const name = row["название"]?.trim();
-      const img  = row["фото(ссылка)"]?.trim();
+      const imgRaw = row["фото(ссылка)"]?.trim();
+      const img =
+        typeof normalizeSheetImageUrl === "function"
+          ? normalizeSheetImageUrl(imgRaw)
+          : (imgRaw || "");
       const desc = row["описание"]?.trim() || "";
 
-      if (!name || !img) return;
+      if (!name || !imgRaw) return;
 
       const card = document.createElement("div");
       card.className = "card";
       card.innerHTML = `
         <div class="card-img">
-          <img src="${img}" alt="${name}">
+          <img src="${img}" alt="${name}" referrerpolicy="no-referrer" loading="lazy" decoding="async">
         </div>
         <div class="card-body">
           <p class="card-title">${name}</p>

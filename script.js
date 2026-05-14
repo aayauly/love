@@ -22,6 +22,12 @@ function ready(fn) {
 }
 
 ready(() => {
+  function toProductImgUrl(raw) {
+    return typeof normalizeSheetImageUrl === "function"
+      ? normalizeSheetImageUrl(raw)
+      : String(raw || "").trim();
+  }
+
   // ====== GLOBALS ======
   let processedItems = [];
   let fields = [];
@@ -92,7 +98,10 @@ ready(() => {
     const priceEl = modal.querySelector("#modalPrice");
     const descEl = modal.querySelector("#modalDesc");
 
-    if (imgEl) imgEl.src = img || "";
+    if (imgEl) {
+      imgEl.referrerPolicy = "no-referrer";
+      imgEl.src = img || "";
+    }
     if (titleEl) titleEl.textContent = name || "";
     if (priceEl) priceEl.textContent = price ? price + " ₸" : "";
     if (descEl) descEl.textContent = desc || "";
@@ -248,7 +257,7 @@ ready(() => {
 
     for (const item of processedItems) {
       const name = item[fields[0]] || "";
-      let img = item[fields[1]] || "";
+      const img = toProductImgUrl(item[fields[1]] || "");
       const price = item[fields[2]] || "";
       const desc = item[fields[3]] || "";
       const category = (item[fields[4]] || "").toLowerCase();
@@ -277,7 +286,7 @@ ready(() => {
       card.className = "card";
       card.innerHTML = `
         <div class="card-img-wrap">
-          <img loading="lazy" class="all-products-img" src="${img}" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZThlOGU4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMjAiPtCk0L7RgtC+PC90ZXh0Pjwvc3ZnPg=='">
+          <img class="all-products-img" src="${img}" referrerpolicy="no-referrer" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZThlOGU4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMjAiPtCk0L7RgtC+PC90ZXh0Pjwvc3ZnPg=='">
           <img class="heart-icon ${favorites.includes(name) ? "favorited" : ""}"
                src="./images/${favorites.includes(name) ? "heart_icon_after" : "heart_icon_before"}.svg"
                alt="Избранное">
