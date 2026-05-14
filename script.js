@@ -249,9 +249,6 @@ ready(() => {
     for (const item of processedItems) {
       const name = item[fields[0]] || "";
       let img = item[fields[1]] || "";
-      if (img.includes('/-/')) {
-        img = img.split('/-/')[0] + '/';
-      }
       const price = item[fields[2]] || "";
       const desc = item[fields[3]] || "";
       const category = (item[fields[4]] || "").toLowerCase();
@@ -280,7 +277,7 @@ ready(() => {
       card.className = "card";
       card.innerHTML = `
         <div class="card-img-wrap">
-          <img loading="lazy" class="all-products-img" src="${img}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'240\' height=\'160\'><rect width=\'100%\' height=\'100%\' fill=\'%23e8e8e8\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23999\' font-size=\'20\'>Фото</text></svg>'">
+          <img loading="lazy" class="all-products-img" src="${img}" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZThlOGU4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMjAiPtCk0L7RgtC+PC90ZXh0Pjwvc3ZnPg=='">
           <img class="heart-icon ${favorites.includes(name) ? "favorited" : ""}"
                src="./images/${favorites.includes(name) ? "heart_icon_after" : "heart_icon_before"}.svg"
                alt="Избранное">
