@@ -63,7 +63,11 @@ function renderFavorites() {
 
   favItems.forEach((raw) => {
     const name = raw[fields[0]] || "";
-    const img = toProductImgUrl(raw[fields[1]] || "");
+    const imgRaw =
+      typeof getRowImageUrl === "function"
+        ? getRowImageUrl(raw, fields)
+        : raw[fields[1]] || "";
+    const img = toProductImgUrl(imgRaw);
     const price = raw[fields[2]] || "";
     const desc = raw[fields[3]] || "";
 
@@ -89,8 +93,10 @@ function renderFavorites() {
     productImg.alt = name;
     productImg.loading = "lazy";
     productImg.decoding = "async";
-    if (typeof applyProductImage === "function") {
-      applyProductImage(productImg, raw[fields[1]] || "");
+    if (typeof observeProductImage === "function") {
+      observeProductImage(productImg, imgRaw);
+    } else if (typeof applyProductImage === "function") {
+      applyProductImage(productImg, imgRaw);
     } else {
       productImg.src = img;
     }

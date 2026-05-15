@@ -176,7 +176,12 @@
 
     result.data.forEach(row => {
       const name = row["название"]?.trim();
-      const imgRaw = row["фото(ссылка)"]?.trim();
+      const imgRaw = (
+        row["фото(ссылка)"] ||
+        row["Фото(ссылка)"] ||
+        Object.values(row).find((v) => typeof v === "string" && v.startsWith("http")) ||
+        ""
+      ).trim();
       const img =
         typeof normalizeSheetImageUrl === "function"
           ? normalizeSheetImageUrl(imgRaw)
@@ -199,7 +204,9 @@
       photoImg.alt = name;
       photoImg.loading = "lazy";
       photoImg.decoding = "async";
-      if (typeof applyProductImage === "function") {
+      if (typeof observeProductImage === "function") {
+        observeProductImage(photoImg, imgRaw);
+      } else if (typeof applyProductImage === "function") {
         applyProductImage(photoImg, imgRaw);
       } else {
         photoImg.src = img;

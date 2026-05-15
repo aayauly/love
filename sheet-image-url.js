@@ -1,13 +1,16 @@
 /**
- * Normalize image URLs from Google Sheets for use in <img src>.
- * - Google Drive "view" links → direct image URL
- * - Uploadcare custom CDN (*.ucarecd.net) → ucarecdn.com + fallbacks on error
+ * Product images from Google Sheets (Uploadcare CDN).
+ * Do NOT rewrite *.ucarecd.net → ucarecdn.com (different projects → 404).
  */
 (function (global) {
   "use strict";
 
   var PRODUCT_IMG_PLACEHOLDER =
     "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZThlOGU4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMjAiPtCk0L7RgtC+PC90ZXh0Pjwvc3ZnPg==";
+
+  var MAX_CONCURRENT = 5;
+  var queue = [];
+  var active = 0;
 
   function cleanRawUrl(raw) {
     if (raw == null) return "";
@@ -30,7 +33,21 @@
     return /ucarecd\.net|ucarecdn\.com/i.test(url);
   }
 
-  /** Primary URL used in WhatsApp / cart (first candidate). */
+  /** Find photo column even if header text varies. */
+  function findImageFieldName(fields) {
+    if (!fields || !fields.length) return null;
+    for (var i = 0; i < fields.length; i++) {
+      if (/фото|photo/i.test(fields[i])) return fields[i];
+    }
+    return fields[1] || fields[0];
+  }
+
+  function getRowImageUrl(item, fields) {
+    if (!item) return "";
+    var key = findImageFieldName(fields);
+    return key ? item[key] : "";
+  }
+
   function normalizeSheetImageUrl(raw) {
     var url = cleanRawUrl(raw);
     if (!url) return "";
@@ -48,27 +65,20 @@
       return "https://drive.google.com/uc?export=view&id=" + fileId;
     }
 
-    if (isUploadcareUrl(url)) {
-      return normalizeUploadcarePrimary(url);
-    }
-
     return url;
   }
 
-  function normalizeUploadcarePrimary(url) {
-    var m = url.match(
-      /^https?:\/\/(?:[a-z0-9-]+\.)?ucarecd\.net\/([a-f0-9-]{36})(\/.*)?$/i
+  function proxyImageUrl(url) {
+    return (
+      "https://images.weserv.nl/?url=" +
+      encodeURIComponent(url.replace(/^https?:\/\//, "")) +
+      "&w=750&h=1000&fit=inside&we&output=jpg"
     );
-    if (m) {
-      return "https://ucarecdn.com/" + m[1] + (m[2] || "/");
-    }
-    return url;
   }
 
-  /** Ordered list of URLs to try in <img> (primary + fallbacks). */
   function getProductImageCandidates(raw) {
-    var primary = normalizeSheetImageUrl(raw);
-    if (!primary) return [];
+    var url = normalizeSheetImageUrl(raw);
+    if (!url) return [];
 
     var seen = {};
     var list = [];
@@ -79,26 +89,16 @@
       }
     }
 
-    var rawClean = cleanRawUrl(raw);
-    if (rawClean) add(rawClean);
-    add(primary);
+    add(url);
 
-    var uuidMatch = primary.match(
-      /\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})(\/.*)?$/i
-    );
-    if (uuidMatch && isUploadcareUrl(primary)) {
-      var uuid = uuidMatch[1];
-      var suffix = uuidMatch[2] || "/";
-      add("https://ucarecdn.com/" + uuid + suffix);
-      add("https://ucarecdn.com/" + uuid + "/-/resize/750x/");
-      add("https://ucarecdn.com/" + uuid + "/");
-
-      var custom = rawClean.match(
-        /^https?:\/\/([a-z0-9-]+\.ucarecd\.net)\/([a-f0-9-]{36})(\/.*)?$/i
-      );
-      if (custom) {
-        add("https://" + custom[1] + "/" + custom[2] + (custom[3] || "/"));
+    if (isUploadcareUrl(url)) {
+      var base = url.match(/^(https?:\/\/[^/]+\/[a-f0-9-]{36})/i);
+      if (base) {
+        add(base[1] + "/");
+        add(base[1] + "/-/resize/750x/");
+        add(base[1] + "/-/format/auto/-/quality/smart/");
       }
+      add(proxyImageUrl(url));
     }
 
     return list;
@@ -108,39 +108,88 @@
     return isGoogleImageUrl(url) ? "no-referrer" : "";
   }
 
-  /**
-   * Load product photo with automatic fallbacks (fixes most Uploadcare / Drive issues).
-   */
-  function applyProductImage(imgEl, rawUrl, placeholder) {
-    if (!imgEl) return normalizeSheetImageUrl(rawUrl);
+  function loadImageNow(imgEl, rawUrl, placeholder, done) {
     var candidates = getProductImageCandidates(rawUrl);
     var fallback = placeholder || PRODUCT_IMG_PLACEHOLDER;
     var idx = 0;
+    var generation = 0;
+
+    function finish() {
+      imgEl.onload = null;
+      imgEl.onerror = null;
+      if (done) done();
+    }
+
+    function failAll() {
+      imgEl.src = fallback;
+      finish();
+    }
 
     function tryNext() {
       if (idx >= candidates.length) {
-        imgEl.onerror = null;
-        imgEl.onload = null;
-        imgEl.src = fallback;
+        failAll();
         return;
       }
-      var url = candidates[idx++];
-      imgEl.referrerPolicy = referrerPolicyForUrl(url);
+      var gen = ++generation;
+      var tryUrl = candidates[idx++];
+
+      imgEl.referrerPolicy = referrerPolicyForUrl(tryUrl);
       imgEl.onload = function () {
-        imgEl.onerror = null;
-        imgEl.onload = null;
+        if (gen !== generation) return;
+        finish();
       };
-      imgEl.onerror = tryNext;
-      imgEl.src = url;
+      imgEl.onerror = function () {
+        if (gen !== generation) return;
+        window.setTimeout(tryNext, 80);
+      };
+      imgEl.src = tryUrl;
     }
 
     tryNext();
     return candidates[0] || "";
   }
 
+  function drainQueue() {
+    while (active < MAX_CONCURRENT && queue.length) {
+      var job = queue.shift();
+      active++;
+      loadImageNow(job.imgEl, job.rawUrl, job.placeholder, function () {
+        active--;
+        drainQueue();
+      });
+    }
+  }
+
+  function applyProductImage(imgEl, rawUrl, placeholder) {
+    if (!imgEl) return normalizeSheetImageUrl(rawUrl);
+    queue.push({ imgEl: imgEl, rawUrl: rawUrl, placeholder: placeholder });
+    drainQueue();
+    return normalizeSheetImageUrl(rawUrl);
+  }
+
+  function observeProductImage(imgEl, rawUrl, placeholder) {
+    if (!imgEl) return;
+    if (!("IntersectionObserver" in global)) {
+      applyProductImage(imgEl, rawUrl, placeholder);
+      return;
+    }
+    var io = new IntersectionObserver(
+      function (entries) {
+        if (!entries[0].isIntersecting) return;
+        io.disconnect();
+        applyProductImage(imgEl, rawUrl, placeholder);
+      },
+      { rootMargin: "300px", threshold: 0.01 }
+    );
+    io.observe(imgEl);
+  }
+
   global.PRODUCT_IMG_PLACEHOLDER = PRODUCT_IMG_PLACEHOLDER;
   global.normalizeSheetImageUrl = normalizeSheetImageUrl;
+  global.findImageFieldName = findImageFieldName;
+  global.getRowImageUrl = getRowImageUrl;
   global.getProductImageCandidates = getProductImageCandidates;
   global.applyProductImage = applyProductImage;
+  global.observeProductImage = observeProductImage;
   global.referrerPolicyForUrl = referrerPolicyForUrl;
 })(typeof window !== "undefined" ? window : globalThis);

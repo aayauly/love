@@ -260,7 +260,11 @@ ready(() => {
 
     for (const item of processedItems) {
       const name = item[fields[0]] || "";
-      const img = toProductImgUrl(item[fields[1]] || "");
+      const imgRaw =
+        typeof getRowImageUrl === "function"
+          ? getRowImageUrl(item, fields)
+          : item[fields[1]] || "";
+      const img = toProductImgUrl(imgRaw);
       const price = item[fields[2]] || "";
       const desc = item[fields[3]] || "";
       const category = (item[fields[4]] || "").toLowerCase();
@@ -304,10 +308,12 @@ ready(() => {
       const productImg = document.createElement("img");
       productImg.className = "all-products-img";
       productImg.alt = name;
-      productImg.loading = cnt <= 10 ? "eager" : "lazy";
+      productImg.loading = "lazy";
       productImg.decoding = "async";
-      if (typeof applyProductImage === "function") {
-        applyProductImage(productImg, item[fields[1]] || "");
+      if (typeof observeProductImage === "function") {
+        observeProductImage(productImg, imgRaw);
+      } else if (typeof applyProductImage === "function") {
+        applyProductImage(productImg, imgRaw);
       } else {
         productImg.src = img;
       }

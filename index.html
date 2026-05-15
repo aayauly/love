@@ -81,7 +81,9 @@
               previewImg.className = "all-products-img";
               previewImg.loading = "lazy";
               previewImg.decoding = "async";
-              if (typeof applyProductImage === "function") {
+              if (typeof observeProductImage === "function") {
+                observeProductImage(previewImg, imgRaw);
+              } else if (typeof applyProductImage === "function") {
                 applyProductImage(previewImg, imgRaw);
               } else {
                 previewImg.src = img;
@@ -348,7 +350,9 @@ src="https://www.facebook.com/tr?id=1455613572125265&ev=PageView&noscript=1"
               previewImg.className = "all-products-img";
               previewImg.loading = "lazy";
               previewImg.decoding = "async";
-              if (typeof applyProductImage === "function") {
+              if (typeof observeProductImage === "function") {
+                observeProductImage(previewImg, imgRaw);
+              } else if (typeof applyProductImage === "function") {
                 applyProductImage(previewImg, imgRaw);
               } else {
                 previewImg.src = img;
@@ -399,7 +403,9 @@ src="https://www.facebook.com/tr?id=1455613572125265&ev=PageView&noscript=1"
               const popularImg = document.createElement("img");
               popularImg.loading = "lazy";
               popularImg.decoding = "async";
-              if (typeof applyProductImage === "function") {
+              if (typeof observeProductImage === "function") {
+                observeProductImage(popularImg, imgRaw);
+              } else if (typeof applyProductImage === "function") {
                 applyProductImage(popularImg, imgRaw);
               } else {
                 popularImg.src = img;
