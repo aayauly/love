@@ -1,16 +1,8 @@
 /**
- * Product images from Google Sheets (Uploadcare CDN).
- * Do NOT rewrite *.ucarecd.net → ucarecdn.com (different projects → 404).
+ * Product images from Google Sheet (Uploadcare). Use URL as-is from the sheet.
  */
 (function (global) {
   "use strict";
-
-  var PRODUCT_IMG_PLACEHOLDER =
-    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZThlOGU4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMjAiPtCk0L7RgtC+PC90ZXh0Pjwvc3ZnPg==";
-
-  var MAX_CONCURRENT = 5;
-  var queue = [];
-  var active = 0;
 
   function cleanRawUrl(raw) {
     if (raw == null) return "";
@@ -25,21 +17,12 @@
     return url;
   }
 
-  function isGoogleImageUrl(url) {
-    return /drive\.google|googleusercontent|ggpht\.com/i.test(url);
-  }
-
-  function isUploadcareUrl(url) {
-    return /ucarecd\.net|ucarecdn\.com/i.test(url);
-  }
-
-  /** Find photo column even if header text varies. */
   function findImageFieldName(fields) {
     if (!fields || !fields.length) return null;
     for (var i = 0; i < fields.length; i++) {
       if (/фото|photo/i.test(fields[i])) return fields[i];
     }
-    return fields[1] || fields[0];
+    return fields[1] || null;
   }
 
   function getRowImageUrl(item, fields) {
@@ -55,141 +38,58 @@
     if (/^https?:\/\/[^/]*googleusercontent\.com\//i.test(url)) return url;
 
     var fileId = null;
-    var filePath = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (filePath) fileId = filePath[1];
+    var m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (m) fileId = m[1];
     if (!fileId && /drive\.google\.com/.test(url)) {
-      var idParam = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-      if (idParam) fileId = idParam[1];
+      var p = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (p) fileId = p[1];
     }
     if (fileId) {
       return "https://drive.google.com/uc?export=view&id=" + fileId;
     }
-
     return url;
   }
 
-  function proxyImageUrl(url) {
+  function proxyUrl(url) {
     return (
       "https://images.weserv.nl/?url=" +
       encodeURIComponent(url.replace(/^https?:\/\//, "")) +
-      "&w=750&h=1000&fit=inside&we&output=jpg"
+      "&w=800&h=1000&fit=inside&output=jpg"
     );
   }
 
-  function getProductImageCandidates(raw) {
-    var url = normalizeSheetImageUrl(raw);
-    if (!url) return [];
+  /** Set image src on an element already in the document. */
+  function setProductImage(imgEl, rawUrl) {
+    if (!imgEl) return "";
+    var url = normalizeSheetImageUrl(rawUrl);
+    if (!url) return "";
 
-    var seen = {};
-    var list = [];
-    function add(u) {
-      if (u && !seen[u]) {
-        seen[u] = true;
-        list.push(u);
-      }
+    if (/drive\.google|googleusercontent/i.test(url)) {
+      imgEl.referrerPolicy = "no-referrer";
+    } else {
+      imgEl.removeAttribute("referrerpolicy");
     }
 
-    add(url);
-
-    if (isUploadcareUrl(url)) {
-      var base = url.match(/^(https?:\/\/[^/]+\/[a-f0-9-]{36})/i);
-      if (base) {
-        add(base[1] + "/");
-        add(base[1] + "/-/resize/750x/");
-        add(base[1] + "/-/format/auto/-/quality/smart/");
-      }
-      add(proxyImageUrl(url));
-    }
-
-    return list;
-  }
-
-  function referrerPolicyForUrl(url) {
-    return isGoogleImageUrl(url) ? "no-referrer" : "";
-  }
-
-  function loadImageNow(imgEl, rawUrl, placeholder, done) {
-    var candidates = getProductImageCandidates(rawUrl);
-    var fallback = placeholder || PRODUCT_IMG_PLACEHOLDER;
-    var idx = 0;
-    var generation = 0;
-
-    function finish() {
-      imgEl.onload = null;
+    var triedProxy = false;
+    imgEl.onload = function () {
       imgEl.onerror = null;
-      if (done) done();
-    }
-
-    function failAll() {
-      imgEl.src = fallback;
-      finish();
-    }
-
-    function tryNext() {
-      if (idx >= candidates.length) {
-        failAll();
+    };
+    imgEl.onerror = function () {
+      if (!triedProxy && /ucarecd|ucarecdn/i.test(url)) {
+        triedProxy = true;
+        imgEl.src = proxyUrl(url);
         return;
       }
-      var gen = ++generation;
-      var tryUrl = candidates[idx++];
-
-      imgEl.referrerPolicy = referrerPolicyForUrl(tryUrl);
-      imgEl.onload = function () {
-        if (gen !== generation) return;
-        finish();
-      };
-      imgEl.onerror = function () {
-        if (gen !== generation) return;
-        window.setTimeout(tryNext, 80);
-      };
-      imgEl.src = tryUrl;
-    }
-
-    tryNext();
-    return candidates[0] || "";
+      imgEl.onerror = null;
+    };
+    imgEl.src = url;
+    return url;
   }
 
-  function drainQueue() {
-    while (active < MAX_CONCURRENT && queue.length) {
-      var job = queue.shift();
-      active++;
-      loadImageNow(job.imgEl, job.rawUrl, job.placeholder, function () {
-        active--;
-        drainQueue();
-      });
-    }
-  }
-
-  function applyProductImage(imgEl, rawUrl, placeholder) {
-    if (!imgEl) return normalizeSheetImageUrl(rawUrl);
-    queue.push({ imgEl: imgEl, rawUrl: rawUrl, placeholder: placeholder });
-    drainQueue();
-    return normalizeSheetImageUrl(rawUrl);
-  }
-
-  function observeProductImage(imgEl, rawUrl, placeholder) {
-    if (!imgEl) return;
-    if (!("IntersectionObserver" in global)) {
-      applyProductImage(imgEl, rawUrl, placeholder);
-      return;
-    }
-    var io = new IntersectionObserver(
-      function (entries) {
-        if (!entries[0].isIntersecting) return;
-        io.disconnect();
-        applyProductImage(imgEl, rawUrl, placeholder);
-      },
-      { rootMargin: "300px", threshold: 0.01 }
-    );
-    io.observe(imgEl);
-  }
-
-  global.PRODUCT_IMG_PLACEHOLDER = PRODUCT_IMG_PLACEHOLDER;
   global.normalizeSheetImageUrl = normalizeSheetImageUrl;
   global.findImageFieldName = findImageFieldName;
   global.getRowImageUrl = getRowImageUrl;
-  global.getProductImageCandidates = getProductImageCandidates;
-  global.applyProductImage = applyProductImage;
-  global.observeProductImage = observeProductImage;
-  global.referrerPolicyForUrl = referrerPolicyForUrl;
+  global.setProductImage = setProductImage;
+  global.applyProductImage = setProductImage;
+  global.observeProductImage = setProductImage;
 })(typeof window !== "undefined" ? window : globalThis);

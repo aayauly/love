@@ -22,7 +22,7 @@
   <link rel="shortcut icon" href="./images/loveballoon-logo.png" type="image/x-icon">
   <link rel="preconnect" href="https://ucarecdn.com" crossorigin />
   <link rel="dns-prefetch" href="https://ucarecdn.com" />
-  <script src="./sheet-image-url.js"></script>
+  <script src="./sheet-image-url.js?v=3"></script>
 </head>
 <script>
   if (window.location.hostname === "www.loveballoon.kz") {
@@ -81,15 +81,13 @@
               previewImg.className = "all-products-img";
               previewImg.loading = "lazy";
               previewImg.decoding = "async";
-              if (typeof observeProductImage === "function") {
-                observeProductImage(previewImg, imgRaw);
-              } else if (typeof applyProductImage === "function") {
-                applyProductImage(previewImg, imgRaw);
+              card.querySelector(".card-img-wrap").appendChild(previewImg);
+              previewContainer.appendChild(card);
+              if (typeof setProductImage === "function") {
+                setProductImage(previewImg, imgRaw);
               } else {
                 previewImg.src = img;
               }
-              card.querySelector(".card-img-wrap").appendChild(previewImg);
-              previewContainer.appendChild(card);
             });
           },
         }
@@ -297,7 +295,7 @@ src="https://www.facebook.com/tr?id=1455613572125265&ev=PageView&noscript=1"
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <script src="./script.js"></script>
+  <script src="./script.js?v=3"></script>
   <script>
     // Переадресация с www.
     if (window.location.hostname === "www.loveballoon.kz") {
@@ -350,15 +348,13 @@ src="https://www.facebook.com/tr?id=1455613572125265&ev=PageView&noscript=1"
               previewImg.className = "all-products-img";
               previewImg.loading = "lazy";
               previewImg.decoding = "async";
-              if (typeof observeProductImage === "function") {
-                observeProductImage(previewImg, imgRaw);
-              } else if (typeof applyProductImage === "function") {
-                applyProductImage(previewImg, imgRaw);
+              card.querySelector(".card-img-wrap").appendChild(previewImg);
+              previewContainer.appendChild(card);
+              if (typeof setProductImage === "function") {
+                setProductImage(previewImg, imgRaw);
               } else {
                 previewImg.src = img;
               }
-              card.querySelector(".card-img-wrap").appendChild(previewImg);
-              previewContainer.appendChild(card);
             });
           }
         });
@@ -403,15 +399,13 @@ src="https://www.facebook.com/tr?id=1455613572125265&ev=PageView&noscript=1"
               const popularImg = document.createElement("img");
               popularImg.loading = "lazy";
               popularImg.decoding = "async";
-              if (typeof observeProductImage === "function") {
-                observeProductImage(popularImg, imgRaw);
-              } else if (typeof applyProductImage === "function") {
-                applyProductImage(popularImg, imgRaw);
+              card.querySelector(".card-img-wrap").appendChild(popularImg);
+              popularContainer.appendChild(card);
+              if (typeof setProductImage === "function") {
+                setProductImage(popularImg, imgRaw);
               } else {
                 popularImg.src = img;
               }
-              card.querySelector(".card-img-wrap").appendChild(popularImg);
-              popularContainer.appendChild(card);
             });
           }
         });

@@ -53,16 +53,16 @@ function renderCart() {
         </button>
       </div>
     `;
+    cartList.appendChild(li);
     const cartImg = li.querySelector(".cart-product-img");
-    if (typeof applyProductImage === "function") {
-      applyProductImage(cartImg, item.img);
+    if (typeof setProductImage === "function") {
+      setProductImage(cartImg, item.img);
     } else {
       cartImg.src =
         typeof normalizeSheetImageUrl === "function"
           ? normalizeSheetImageUrl(item.img)
           : (item.img || "");
     }
-    cartList.appendChild(li);
   });
 
   // Удаление товаров

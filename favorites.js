@@ -93,14 +93,14 @@ function renderFavorites() {
     productImg.alt = name;
     productImg.loading = "lazy";
     productImg.decoding = "async";
-    if (typeof observeProductImage === "function") {
-      observeProductImage(productImg, imgRaw);
-    } else if (typeof applyProductImage === "function") {
-      applyProductImage(productImg, imgRaw);
+    imgWrap.insertBefore(productImg, imgWrap.firstChild);
+    grid.appendChild(card);
+
+    if (typeof setProductImage === "function") {
+      setProductImage(productImg, imgRaw);
     } else {
       productImg.src = img;
     }
-    imgWrap.insertBefore(productImg, imgWrap.firstChild);
 
     // открыть модалку
     card.addEventListener("click", () => openModal({ name, img, price, desc }));
@@ -113,7 +113,6 @@ function renderFavorites() {
       renderFavorites();
     });
 
-    grid.appendChild(card);
   });
 }
 
@@ -131,8 +130,8 @@ function openModal({ name, img, price, desc }) {
   const closeBtn  = modal.querySelector('#closeModal');
 
   // наполняем
-  if (typeof applyProductImage === "function") {
-    applyProductImage(imgEl, img);
+  if (typeof setProductImage === "function") {
+    setProductImage(imgEl, img);
   } else {
     imgEl.src = img;
   }

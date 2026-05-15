@@ -99,8 +99,8 @@ ready(() => {
     const descEl = modal.querySelector("#modalDesc");
 
     if (imgEl) {
-      if (typeof applyProductImage === "function") {
-        applyProductImage(imgEl, img);
+      if (typeof setProductImage === "function") {
+        setProductImage(imgEl, img);
       } else {
         imgEl.src = img || "";
       }
@@ -310,14 +310,15 @@ ready(() => {
       productImg.alt = name;
       productImg.loading = "lazy";
       productImg.decoding = "async";
-      if (typeof observeProductImage === "function") {
-        observeProductImage(productImg, imgRaw);
-      } else if (typeof applyProductImage === "function") {
-        applyProductImage(productImg, imgRaw);
+      imgWrap.insertBefore(productImg, imgWrap.firstChild);
+
+      prod.appendChild(card);
+
+      if (typeof setProductImage === "function") {
+        setProductImage(productImg, imgRaw);
       } else {
         productImg.src = img;
       }
-      imgWrap.insertBefore(productImg, imgWrap.firstChild);
 
       // Order button — stop propagation (so card click doesn't open modal)
       const orderBtn = card.querySelector(".order-now");
@@ -331,7 +332,6 @@ ready(() => {
 
       // clicking card opens modal
       card.addEventListener("click", () => openModal({ name, img, price, desc }));
-      prod.appendChild(card);
 
       const heart = card.querySelector(".heart-icon");
       heart?.addEventListener("click", (e) => {

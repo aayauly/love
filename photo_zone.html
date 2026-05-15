@@ -111,7 +111,7 @@
 
   <!-- 1) Подключаем PapaParse -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <script src="./sheet-image-url.js"></script>
+  <script src="./sheet-image-url.js?v=3"></script>
   <!-- 2) Наш скрипт -->
   <script>
   const KASPI_URL = "https://pay.kaspi.kz/pay/pizgc94e";
@@ -129,8 +129,8 @@
 
   function openModal(item) {
     currentItem = item;
-    if (typeof applyProductImage === "function") {
-      applyProductImage(imgEl, item.img);
+    if (typeof setProductImage === "function") {
+      setProductImage(imgEl, item.img);
     } else {
       imgEl.src = item.img;
     }
@@ -204,14 +204,14 @@
       photoImg.alt = name;
       photoImg.loading = "lazy";
       photoImg.decoding = "async";
-      if (typeof observeProductImage === "function") {
-        observeProductImage(photoImg, imgRaw);
-      } else if (typeof applyProductImage === "function") {
-        applyProductImage(photoImg, imgRaw);
+      card.querySelector(".card-img").appendChild(photoImg);
+      container.appendChild(card);
+
+      if (typeof setProductImage === "function") {
+        setProductImage(photoImg, imgRaw);
       } else {
         photoImg.src = img;
       }
-      card.querySelector(".card-img").appendChild(photoImg);
 
       // ✅ Сначала: обработчик кнопки
       const btn = card.querySelector(".card-btn");
@@ -225,7 +225,6 @@
         openModal({ name, img, desc });
       });
 
-      container.appendChild(card);
     });
   }
 });
