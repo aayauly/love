@@ -99,10 +99,11 @@ ready(() => {
     const descEl = modal.querySelector("#modalDesc");
 
     if (imgEl) {
+      imgEl.referrerPolicy = "no-referrer";
       if (typeof setProductImage === "function") {
         setProductImage(imgEl, img);
       } else {
-        imgEl.src = img || "";
+        imgEl.src = toProductImgUrl(img);
       }
     }
     if (titleEl) titleEl.textContent = name || "";
@@ -310,6 +311,7 @@ ready(() => {
       productImg.alt = name;
       productImg.loading = "lazy";
       productImg.decoding = "async";
+      productImg.referrerPolicy = "no-referrer";
       imgWrap.insertBefore(productImg, imgWrap.firstChild);
 
       prod.appendChild(card);

@@ -113,7 +113,26 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="./sheet-image-url.js?v=6"></script>
   <!-- 2) Наш скрипт -->
-  <script>
+<script>
+  const IMAGE_FALLBACK = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='160'><rect width='100%' height='100%' fill='%23e8e8e8'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-size='20'>Фото</text></svg>";
+
+  function normalizeImageUrl(url) {
+    const trimmed = (url || "").trim();
+    if (!trimmed) return "";
+    if (trimmed.startsWith("//")) return `https:${trimmed}`;
+    return trimmed;
+  }
+
+  function applyImageSource(imgEl, url) {
+    if (!imgEl) return;
+    imgEl.referrerPolicy = "no-referrer";
+    imgEl.src = normalizeImageUrl(url) || IMAGE_FALLBACK;
+    imgEl.onerror = function onImageError() {
+      this.onerror = null;
+      this.src = IMAGE_FALLBACK;
+    };
+  }
+
   const KASPI_URL = "https://pay.kaspi.kz/pay/pizgc94e";
 
   // --- Модалка ---
@@ -129,6 +148,7 @@
 
   function openModal(item) {
     currentItem = item;
+    imgEl.referrerPolicy = "no-referrer";
     if (typeof setProductImage === "function") {
       setProductImage(imgEl, item.img);
     } else {
@@ -204,6 +224,7 @@
       photoImg.alt = name;
       photoImg.loading = "lazy";
       photoImg.decoding = "async";
+      photoImg.referrerPolicy = "no-referrer";
       card.querySelector(".card-img").appendChild(photoImg);
       container.appendChild(card);
 

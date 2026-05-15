@@ -55,6 +55,7 @@ function renderCart() {
     `;
     cartList.appendChild(li);
     const cartImg = li.querySelector(".cart-product-img");
+    cartImg.referrerPolicy = "no-referrer";
     if (typeof setProductImage === "function") {
       setProductImage(cartImg, item.img);
     } else {

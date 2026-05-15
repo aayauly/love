@@ -75,7 +75,7 @@ function renderFavorites() {
     card.className = "card";
     card.innerHTML = `
       <div class="card-img-wrap">
-        <img
+    <img
       class="heart-icon ${favorites.includes(name) ? "favorited" : ""}"
       src="./images/${
         favorites.includes(name) ? "heart_icon_after" : "heart_icon_before"
@@ -93,6 +93,7 @@ function renderFavorites() {
     productImg.alt = name;
     productImg.loading = "lazy";
     productImg.decoding = "async";
+    productImg.referrerPolicy = "no-referrer";
     imgWrap.insertBefore(productImg, imgWrap.firstChild);
     grid.appendChild(card);
 
@@ -130,10 +131,11 @@ function openModal({ name, img, price, desc }) {
   const closeBtn  = modal.querySelector('#closeModal');
 
   // наполняем
+  imgEl.referrerPolicy = "no-referrer";
   if (typeof setProductImage === "function") {
     setProductImage(imgEl, img);
   } else {
-    imgEl.src = img;
+    imgEl.src = toProductImgUrl(img);
   }
   titleEl.textContent = name;
   priceEl.textContent = price + ' ₸';

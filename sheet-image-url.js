@@ -125,11 +125,7 @@
     var urls = getLoadOrder(url);
     var idx = 0;
 
-    if (/drive\.google|googleusercontent/i.test(url)) {
-      imgEl.referrerPolicy = "no-referrer";
-    } else {
-      imgEl.removeAttribute("referrerpolicy");
-    }
+    imgEl.referrerPolicy = "no-referrer";
 
     function tryNext() {
       if (idx >= urls.length) {

@@ -81,6 +81,7 @@
               previewImg.className = "all-products-img";
               previewImg.loading = "lazy";
               previewImg.decoding = "async";
+              previewImg.referrerPolicy = "no-referrer";
               card.querySelector(".card-img-wrap").appendChild(previewImg);
               previewContainer.appendChild(card);
               if (typeof setProductImage === "function") {
@@ -399,6 +400,7 @@ src="https://www.facebook.com/tr?id=1455613572125265&ev=PageView&noscript=1"
               const popularImg = document.createElement("img");
               popularImg.loading = "lazy";
               popularImg.decoding = "async";
+              popularImg.referrerPolicy = "no-referrer";
               card.querySelector(".card-img-wrap").appendChild(popularImg);
               popularContainer.appendChild(card);
               if (typeof setProductImage === "function") {
