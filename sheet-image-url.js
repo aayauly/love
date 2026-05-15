@@ -1,7 +1,5 @@
 /**
- * Product images from Google Sheet.
- * - ucarecdn.com → load directly (works on sites)
- * - *.ucarecd.net, imgbb, ibb.co → proxy (hotlink / embed blocked)
+ * Product images from Google Sheet (Uploadcare, ImgBB, Google Drive).
  */
 (function (global) {
   "use strict";
@@ -33,16 +31,19 @@
     return key ? item[key] : "";
   }
 
+  function getUploadcareUuid(url) {
+    var m = url.match(
+      /\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i
+    );
+    return m ? m[1] : null;
+  }
+
   function isImgbbUrl(url) {
     return /imgbb\.com|ibb\.co/i.test(url);
   }
 
-  function isUploadcareCustomCdn(url) {
-    return /\.ucarecd\.net/i.test(url);
-  }
-
-  function isUploadcareGlobalCdn(url) {
-    return /ucarecdn\.com/i.test(url);
+  function isUploadcareUrl(url) {
+    return /ucarecd\.net|ucarecdn\.com/i.test(url);
   }
 
   function normalizeSheetImageUrl(raw) {
@@ -61,7 +62,6 @@
     if (fileId) {
       return "https://drive.google.com/uc?export=view&id=" + fileId;
     }
-
     return url;
   }
 
@@ -74,16 +74,14 @@
     );
   }
 
-  /** URLs that must not be loaded directly in <img> on loveballoon.kz */
-  function mustProxyFirst(url) {
-    if (isImgbbUrl(url)) return true;
-    if (isUploadcareCustomCdn(url)) return true;
-    return false;
+  function corsProxyUrl(url) {
+    return "https://corsproxy.io/?" + encodeURIComponent(url);
   }
 
+  /** Build list of URLs to try (order matters). */
   function getLoadOrder(url) {
-    var list = [];
     var seen = {};
+    var list = [];
     function add(u) {
       if (u && !seen[u]) {
         seen[u] = true;
@@ -91,17 +89,31 @@
       }
     }
 
-    if (mustProxyFirst(url)) {
+    var uuid = getUploadcareUuid(url);
+
+    if (isImgbbUrl(url)) {
       add(proxyUrl(url));
+      add(corsProxyUrl(url));
       add(url);
-    } else if (isUploadcareGlobalCdn(url)) {
-      add(url);
-      add(proxyUrl(url));
-    } else {
-      add(url);
-      add(proxyUrl(url));
+      return list;
     }
 
+    if (isUploadcareUrl(url) && uuid) {
+      var suffix = "";
+      var sm = url.match(/\/[a-f0-9-]{36}(\/.*)?$/i);
+      if (sm && sm[1]) suffix = sm[1];
+
+      add("https://ucarecdn.com/" + uuid + suffix);
+      add("https://ucarecdn.com/" + uuid + "/");
+      add("https://ucarecdn.com/" + uuid + "/-/resize/750x/");
+      add(url);
+      add(proxyUrl(url));
+      add(corsProxyUrl(url));
+      return list;
+    }
+
+    add(url);
+    add(proxyUrl(url));
     return list;
   }
 
@@ -127,7 +139,7 @@
       }
       imgEl.onerror = function () {
         idx++;
-        tryNext();
+        window.setTimeout(tryNext, 50);
       };
       imgEl.onload = function () {
         imgEl.onerror = null;
