@@ -20,6 +20,8 @@
     gtag('config', 'G-1JYZQWGDPT');
   </script>
   <link rel="shortcut icon" href="./images/loveballoon-logo.png" type="image/x-icon">
+  <link rel="preconnect" href="https://ucarecdn.com" crossorigin />
+  <link rel="dns-prefetch" href="https://ucarecdn.com" />
   <script src="./sheet-image-url.js"></script>
 </head>
 <script>
@@ -59,9 +61,7 @@
               const card = document.createElement("div");
               card.className = "card";
               card.innerHTML = `
-                <div class="card-img-wrap">
-                  <img loading="lazy" class="all-products-img" src="${img}" referrerpolicy="no-referrer" decoding="async" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'240\' height=\'160\'><rect width=\'100%\' height=\'100%\' fill=\'%23e8e8e8\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23999\' font-size=\'20\'>Фото</text></svg>'">
-                </div>
+                <div class="card-img-wrap"></div>
                 <div class="bot">
                   <div class="card-title">
                     <p>${name}</p>
@@ -77,6 +77,16 @@
                   >Заказать</button>
                 </div>
               `;
+              const previewImg = document.createElement("img");
+              previewImg.className = "all-products-img";
+              previewImg.loading = "lazy";
+              previewImg.decoding = "async";
+              if (typeof applyProductImage === "function") {
+                applyProductImage(previewImg, imgRaw);
+              } else {
+                previewImg.src = img;
+              }
+              card.querySelector(".card-img-wrap").appendChild(previewImg);
               previewContainer.appendChild(card);
             });
           },
@@ -320,9 +330,7 @@ src="https://www.facebook.com/tr?id=1455613572125265&ev=PageView&noscript=1"
               const card = document.createElement("div");
               card.className = "card";
               card.innerHTML = `
-                <div class="card-img-wrap">
-                  <img loading="lazy" class="all-products-img" src="${img}" referrerpolicy="no-referrer" decoding="async" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'240\' height=\'160\'><rect width=\'100%\' height=\'100%\' fill=\'%23e8e8e8\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23999\' font-size=\'20\'>Фото</text></svg>'">
-                </div>
+                <div class="card-img-wrap"></div>
                 <div class="bot">
                   <div class="card-title">
                     <p>${name}</p>
@@ -336,6 +344,16 @@ src="https://www.facebook.com/tr?id=1455613572125265&ev=PageView&noscript=1"
                   )">Заказать</button>
                 </div>
               `;
+              const previewImg = document.createElement("img");
+              previewImg.className = "all-products-img";
+              previewImg.loading = "lazy";
+              previewImg.decoding = "async";
+              if (typeof applyProductImage === "function") {
+                applyProductImage(previewImg, imgRaw);
+              } else {
+                previewImg.src = img;
+              }
+              card.querySelector(".card-img-wrap").appendChild(previewImg);
               previewContainer.appendChild(card);
             });
           }
@@ -364,9 +382,7 @@ src="https://www.facebook.com/tr?id=1455613572125265&ev=PageView&noscript=1"
               const card = document.createElement("div");
               card.className = "card";
               card.innerHTML = `
-                <div class="card-img-wrap">
-                  <img loading="lazy" src="${img}" referrerpolicy="no-referrer" decoding="async" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'240\' height=\'160\'><rect width=\'100%\' height=\'100%\' fill=\'%23e8e8e8\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23999\' font-size=\'20\'>Фото</text></svg>'">
-                </div>
+                <div class="card-img-wrap"></div>
                 <div class="bot">
                   <div class="card-title">
                     <p>${name}</p>
@@ -380,6 +396,15 @@ src="https://www.facebook.com/tr?id=1455613572125265&ev=PageView&noscript=1"
                   )">Заказать</button>
                 </div>
               `;
+              const popularImg = document.createElement("img");
+              popularImg.loading = "lazy";
+              popularImg.decoding = "async";
+              if (typeof applyProductImage === "function") {
+                applyProductImage(popularImg, imgRaw);
+              } else {
+                popularImg.src = img;
+              }
+              card.querySelector(".card-img-wrap").appendChild(popularImg);
               popularContainer.appendChild(card);
             });
           }

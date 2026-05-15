@@ -71,8 +71,7 @@ function renderFavorites() {
     card.className = "card";
     card.innerHTML = `
       <div class="card-img-wrap">
-        <img loading="lazy" class='all-products-img' src="${img}" referrerpolicy="no-referrer" decoding="async" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'240\' height=\'160\'><rect width=\'100%\' height=\'100%\' fill=\'%23e8e8e8\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23999\' font-size=\'20\'>Фото</text></svg>'">
-    <img
+        <img
       class="heart-icon ${favorites.includes(name) ? "favorited" : ""}"
       src="./images/${
         favorites.includes(name) ? "heart_icon_after" : "heart_icon_before"
@@ -83,6 +82,19 @@ function renderFavorites() {
   <p>${name}</p>
   <p class="price">${price} ₸</p>
     `;
+
+    const imgWrap = card.querySelector(".card-img-wrap");
+    const productImg = document.createElement("img");
+    productImg.className = "all-products-img";
+    productImg.alt = name;
+    productImg.loading = "lazy";
+    productImg.decoding = "async";
+    if (typeof applyProductImage === "function") {
+      applyProductImage(productImg, raw[fields[1]] || "");
+    } else {
+      productImg.src = img;
+    }
+    imgWrap.insertBefore(productImg, imgWrap.firstChild);
 
     // открыть модалку
     card.addEventListener("click", () => openModal({ name, img, price, desc }));
@@ -113,8 +125,11 @@ function openModal({ name, img, price, desc }) {
   const closeBtn  = modal.querySelector('#closeModal');
 
   // наполняем
-  imgEl.referrerPolicy = "no-referrer";
-  imgEl.src           = img;
+  if (typeof applyProductImage === "function") {
+    applyProductImage(imgEl, img);
+  } else {
+    imgEl.src = img;
+  }
   titleEl.textContent = name;
   priceEl.textContent = price + ' ₸';
   descEl.textContent  = desc;

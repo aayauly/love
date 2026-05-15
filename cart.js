@@ -42,13 +42,9 @@ function renderCart() {
 
   // Рендерим каждый товар
   cartItems.forEach((item, i) => {
-    const imgSrc =
-      typeof normalizeSheetImageUrl === "function"
-        ? normalizeSheetImageUrl(item.img)
-        : (item.img || "");
     const li = document.createElement('li');
     li.innerHTML = `
-      <img src="${imgSrc}" alt="${item.name}" class="cart-product-img" referrerpolicy="no-referrer" loading="lazy" decoding="async">
+      <img alt="${item.name}" class="cart-product-img" loading="lazy" decoding="async">
       <div class="cart-product-text">
         <p class="cart-product-name">${item.name}</p>
         <p class="cart-price">${item.price} ₸</p>
@@ -57,6 +53,15 @@ function renderCart() {
         </button>
       </div>
     `;
+    const cartImg = li.querySelector(".cart-product-img");
+    if (typeof applyProductImage === "function") {
+      applyProductImage(cartImg, item.img);
+    } else {
+      cartImg.src =
+        typeof normalizeSheetImageUrl === "function"
+          ? normalizeSheetImageUrl(item.img)
+          : (item.img || "");
+    }
     cartList.appendChild(li);
   });
 

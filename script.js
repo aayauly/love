@@ -99,8 +99,11 @@ ready(() => {
     const descEl = modal.querySelector("#modalDesc");
 
     if (imgEl) {
-      imgEl.referrerPolicy = "no-referrer";
-      imgEl.src = img || "";
+      if (typeof applyProductImage === "function") {
+        applyProductImage(imgEl, img);
+      } else {
+        imgEl.src = img || "";
+      }
     }
     if (titleEl) titleEl.textContent = name || "";
     if (priceEl) priceEl.textContent = price ? price + " ₸" : "";
@@ -286,7 +289,6 @@ ready(() => {
       card.className = "card";
       card.innerHTML = `
         <div class="card-img-wrap">
-          <img class="all-products-img" src="${img}" referrerpolicy="no-referrer" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZThlOGU4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMjAiPtCk0L7RgtC+PC90ZXh0Pjwvc3ZnPg=='">
           <img class="heart-icon ${favorites.includes(name) ? "favorited" : ""}"
                src="./images/${favorites.includes(name) ? "heart_icon_after" : "heart_icon_before"}.svg"
                alt="Избранное">
@@ -297,6 +299,19 @@ ready(() => {
           <button class="order-now">Заказать</button>
         </div>
       `;
+
+      const imgWrap = card.querySelector(".card-img-wrap");
+      const productImg = document.createElement("img");
+      productImg.className = "all-products-img";
+      productImg.alt = name;
+      productImg.loading = cnt <= 10 ? "eager" : "lazy";
+      productImg.decoding = "async";
+      if (typeof applyProductImage === "function") {
+        applyProductImage(productImg, item[fields[1]] || "");
+      } else {
+        productImg.src = img;
+      }
+      imgWrap.insertBefore(productImg, imgWrap.firstChild);
 
       // Order button — stop propagation (so card click doesn't open modal)
       const orderBtn = card.querySelector(".order-now");

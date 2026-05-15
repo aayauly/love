@@ -129,8 +129,11 @@
 
   function openModal(item) {
     currentItem = item;
-    imgEl.referrerPolicy = "no-referrer";
-    imgEl.src           = item.img;
+    if (typeof applyProductImage === "function") {
+      applyProductImage(imgEl, item.img);
+    } else {
+      imgEl.src = item.img;
+    }
     titleEl.textContent = item.name;
     descEl.textContent  = item.desc || "";
     overlay.style.display = "block";
@@ -185,14 +188,23 @@
       const card = document.createElement("div");
       card.className = "card";
       card.innerHTML = `
-        <div class="card-img">
-          <img src="${img}" alt="${name}" referrerpolicy="no-referrer" loading="lazy" decoding="async">
-        </div>
+        <div class="card-img"></div>
         <div class="card-body">
           <p class="card-title">${name}</p>
           <button class="card-btn">Заказать</button>
         </div>
       `;
+
+      const photoImg = document.createElement("img");
+      photoImg.alt = name;
+      photoImg.loading = "lazy";
+      photoImg.decoding = "async";
+      if (typeof applyProductImage === "function") {
+        applyProductImage(photoImg, imgRaw);
+      } else {
+        photoImg.src = img;
+      }
+      card.querySelector(".card-img").appendChild(photoImg);
 
       // ✅ Сначала: обработчик кнопки
       const btn = card.querySelector(".card-btn");
