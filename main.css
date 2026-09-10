@@ -370,7 +370,7 @@ a {
 
 .card {
   position: relative;
-  width: 100%;
+  flex: 0 0 auto;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   z-index: 1;
